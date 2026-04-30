@@ -400,27 +400,6 @@ function Get-CIPPTenantAlignment {
                     if ($item.ReportingDisabled) { $ReportingDisabledStandardsCount++ }
                 }
 
-                # For drift templates, include all policy deviation entries from tenantDrift table in alignment score
-                # Accepted/CustomerSpecific count as compliant, all others (New, Denied, etc.) count as non-compliant
-                $CurrentDeviationsCount = $null
-                if ($IsDriftTemplate) {
-                    $PolicyDeviationCompliant = 0
-                    $PolicyDeviationNonCompliant = 0
-                    foreach ($DriftKey in $TenantDriftStatuses.Keys) {
-                        if ($DriftKey -like 'IntuneTemplates.*' -or $DriftKey -like 'ConditionalAccessTemplates.*') {
-                            if ($TenantDriftStatuses[$DriftKey] -in @('Accepted', 'CustomerSpecific')) {
-                                $PolicyDeviationCompliant++
-                            } else {
-                                $PolicyDeviationNonCompliant++
-                            }
-                        }
-                    }
-                    $AllCount += $PolicyDeviationCompliant + $PolicyDeviationNonCompliant
-                    $CompliantStandards += $PolicyDeviationCompliant
-                    $NonCompliantStandards += $PolicyDeviationNonCompliant
-                    $CurrentDeviationsCount = $PolicyDeviationNonCompliant
-                }
-
                 $AlignmentPercentage = if (($AllCount - $ReportingDisabledStandardsCount) -gt 0) {
                     [Math]::Round(($CompliantStandards / ($AllCount - $ReportingDisabledStandardsCount)) * 100)
                 } else {
@@ -450,7 +429,6 @@ function Get-CIPPTenantAlignment {
                     LicenseMissingStandards  = $LicenseMissingStandards
                     TotalStandards           = $AllCount
                     ReportingDisabledCount   = $ReportingDisabledStandardsCount
-                    CurrentDeviationsCount   = $CurrentDeviationsCount
                     LatestDataCollection     = if ($LatestDataCollection) { $LatestDataCollection } else { $null }
                     ComparisonDetails        = $ComparisonResults
                 }
